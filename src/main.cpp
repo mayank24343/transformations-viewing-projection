@@ -65,7 +65,7 @@ int main(int, char**)
     unsigned int n_spiralVertices = createSpiral(shaderProgram, spiral_VAO);
     createCube(shaderProgram, cube_VAO);
 
-		static float timeAccumulator = 0.0f;
+	static float timeAccumulator = 0.0f;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -77,27 +77,27 @@ int main(int, char**)
         ImGui::NewFrame();
 
         glUseProgram(shaderProgram);
-				if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(GLFW_KEY_S)) 
-					showSpiral = !showSpiral;
+        if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(GLFW_KEY_S)) 
+            showSpiral = !showSpiral;
 
-				// Update spiral theta variable based on time
-				float dt = ImGui::GetIO().DeltaTime;
-				timeAccumulator += dt;
-				if (timeAccumulator >= updateInterval) {
-					timeAccumulator -= updateInterval;
-					spiralTheta += spiralDeltaTheta;
-					if(spiralTheta >= 2.0*M_PI) 
-						spiralTheta -= 2.0*M_PI;
-				}
-				
-				// ImGui UI
+        // Update spiral theta variable based on time
+        float dt = ImGui::GetIO().DeltaTime;
+        timeAccumulator += dt;
+        if (timeAccumulator >= updateInterval) {
+            timeAccumulator -= updateInterval;
+            spiralTheta += spiralDeltaTheta;
+            if(spiralTheta >= 2.0*M_PI) 
+                spiralTheta -= 2.0*M_PI;
+        }
+        
+		// ImGui UI
         {
             static float f = 0.0f;
             static int counter = 0;
 
             ImGui::Begin("Information", NULL, ImGuiWindowFlags_AlwaysAutoResize);                          
             ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-						ImGui::Text("Spiral is %s. Press S key to toggle", showSpiral?"displayed":"not displayed");
+			ImGui::Text("Spiral is %s. Press S key to toggle", showSpiral?"displayed":"not displayed");
             ImGui::End();
         }
 
@@ -112,15 +112,19 @@ int main(int, char**)
         glBindVertexArray(axes_VAO); 
         glDrawArrays(GL_LINES, 0, 6);
 
-				if(showSpiral) {
-					glBindVertexArray(spiral_VAO);
-					glDrawArrays(GL_LINE_STRIP, 0, n_spiralVertices);
-				}
+        if(showSpiral) {
+            glBindVertexArray(spiral_VAO);
+            glDrawArrays(GL_LINE_STRIP, 0, n_spiralVertices);
+        }
 
         glBindVertexArray(cube_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 6*2*3);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        setupModelTransformation(shaderProgram);
+        setupViewTransformation(shaderProgram);
+        setupProjectionTransformation(shaderProgram, width , height);
 
         glfwSwapBuffers(window);
 
@@ -342,11 +346,10 @@ void setupModelTransformation(unsigned int &program)
 
 void setupViewTransformation(unsigned int &program)
 {
-		// Default value of camera position
-		camPos.x = 100.0;
-		camPos.y = 100.0;
-		camPos.z = 100.0;
-		//Viewing transformations (World -> Camera coordinates
+    
+    // modify camera position baed on theta
+    spiral(spiralTheta, camPos.x, camPos.y, camPos.z);
+	//Viewing transformations (World -> Camera coordinates
     glm::mat4 view = glm::lookAt(camPos, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
 
     //Pass-on the viewing matrix to the vertex shader
@@ -364,7 +367,7 @@ void setupProjectionTransformation(unsigned int &program, int screen_width, int 
     //Projection transformation
     float aspect = (float)screen_width/(float)screen_height;
 
-    glm::mat4 projection = glm::perspective(45.0f, (GLfloat)screen_width/(GLfloat)screen_height, 0.1f, 1000.0f);
+    glm::mat4 projection = (isOrthographic) ? glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, 0.1f, 1000.0f) : glm::perspective(45.0f, (GLfloat)screen_width/(GLfloat)screen_height, 0.1f, 1000.0f);
 
     //Pass on the projection matrix to the vertex shader
     glUseProgram(program);
