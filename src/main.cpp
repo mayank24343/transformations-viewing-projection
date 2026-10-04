@@ -85,9 +85,10 @@ int main(int, char**)
         timeAccumulator += dt;
         if (timeAccumulator >= updateInterval) {
             timeAccumulator -= updateInterval;
-            spiralTheta += spiralDeltaTheta;
-            if(spiralTheta >= 2.0*M_PI) 
-                spiralTheta -= 2.0*M_PI;
+            if (!isPaused) {
+                spiralTheta += spiralDeltaTheta;
+                if(spiralTheta >= 2.0*M_PI) spiralTheta -= 2.0*M_PI;
+            }
         }
         
 		// ImGui UI
@@ -98,8 +99,23 @@ int main(int, char**)
             ImGui::Begin("Information", NULL, ImGuiWindowFlags_AlwaysAutoResize);                          
             ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			ImGui::Text("Spiral is %s. Press S key to toggle", showSpiral?"displayed":"not displayed");
+            ImGui::Text("Camera position: (%.2f, %.2f, %.2f)", camPos.x, camPos.y, camPos.z);
+            ImGui::Text("Projection: %s. Press P/O keys to toggle", isOrthographic?"Orthographic":"Perspective");
+            ImGui::Text("Animation is %s. Press Space key to toggle", isPaused?"paused":"running");
+            ImGui::Text("Spiral theta: %.2f degrees. Use arrow keys to increase/decrease.", spiralTheta*180.0/M_PI);
             ImGui::End();
         }
+
+        if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(GLFW_KEY_SPACE)) isPaused = !isPaused;
+        if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(GLFW_KEY_P)) isOrthographic = false;
+        if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(GLFW_KEY_O)) isOrthographic = true;
+        if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(GLFW_KEY_LEFT) && isPaused) spiralTheta -= spiralDeltaTheta;
+        if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(GLFW_KEY_RIGHT) && isPaused) spiralTheta += spiralDeltaTheta;
+        if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(GLFW_KEY_UP) && isPaused) spiralTheta += spiralDeltaTheta;
+        if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(GLFW_KEY_DOWN) && isPaused) spiralTheta -= spiralDeltaTheta;
+        if(spiralTheta >= 2.0*M_PI) spiralTheta -= 2.0*M_PI;
+        if(spiralTheta < 0) spiralTheta += 2.0*M_PI;
+
 
         // Rendering
         ImGui::Render();
@@ -367,7 +383,7 @@ void setupProjectionTransformation(unsigned int &program, int screen_width, int 
     //Projection transformation
     float aspect = (float)screen_width/(float)screen_height;
 
-    glm::mat4 projection = (isOrthographic) ? glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, 0.1f, 1000.0f) : glm::perspective(45.0f, (GLfloat)screen_width/(GLfloat)screen_height, 0.1f, 1000.0f);
+    glm::mat4 projection = (isOrthographic) ? glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, 0.1f, 1000.0f) : glm::perspective(45.0f, (GLfloat)screen_width/(GLfloat)screen_height, 0.1f, 1000.0f);
 
     //Pass on the projection matrix to the vertex shader
     glUseProgram(program);
