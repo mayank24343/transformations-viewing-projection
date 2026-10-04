@@ -1,0 +1,3 @@
+/mnt/c/users/mayank/onedrive/desktop/cg_a2/code/code/build/CMakeFiles/Assignment02.dir
+/mnt/c/users/mayank/onedrive/desktop/cg_a2/code/code/build/CMakeFiles/edit_cache.dir
+/mnt/c/users/mayank/onedrive/desktop/cg_a2/code/code/build/CMakeFiles/rebuild_cache.dir
